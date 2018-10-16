@@ -63,6 +63,46 @@ cvx_begin
     
     %Defining objective function for minimizing line losses % Equation 1
     Obj1 = 0;
+     sub_Obj1_real = 0;
+     sub_Obj1_imag = 0;
+     store_Obj1_real = 0;
+     for m = 1:nLines
+          for n = 1:nLines
+              real_voltage = [real(V(m)) real(V(n))];
+              sum_real_voltage = sum(real_voltage,2);
+              imag_voltage = [imag(V(m)) imag(V(n))];
+              sum_imag_voltage = sum(imag_voltage,2);
+              test_R = real(conj(YBus(m,n)));
+              value_test_R = nonzeros(test_R);
+              mag_value_test_R = double(value_test_R);
+              sub_Obj1_real = (sum_real_voltage)' * mag_value_test_R * (sum_real_voltage);
+              sub_Obj2_imag = (sum_imag_voltage)' * mag_value_test_R * (sum_imag_voltage);
+          end
+     end
+     Obj1 = sub_Obj1_real + sub_Obj2_imag;
+    %Obj1 = 0;
+    %Obj1 = (sum(real(V(1))))'*real(conj(YBus(1,1)))*sum(real(V(1)));
+    %Obj1 = sub_Obj1_real + sub_Obj1_imag;
+%      for m = 1:nLines
+%         for n = 1:nLines
+%             real_voltages = [real(V(m)) real(V(n))];
+%             sum_real_voltages = sum(real_voltages);
+%             imag_voltages = [imag(V(m)) imag(V(n))];
+%             sum_imag_voltages = sum(imag_voltages);
+%             sub_obj1 = sum_real_voltages' * 0.8 * sum_real_voltages;
+%             sub_obj2 = sum_imag_voltages' * 0.8 * sum_imag_voltages;
+%             %sub_obj1 = quad_form(sum_real_voltages, 10);
+%             %sub_obj1 = quad_form(real(V(m)) + real(V(n)), 10);
+%             %square_sum_real_voltages = square(sum_real_voltages);
+%             %square_sum_imag_voltages = square(sum_imag_voltages);
+%             %square_total_voltages = [square_sum_real_voltages square_sum_imag_voltages];
+%             %sum_square_total_voltages = sum(square_total_voltages);
+%             %real_imp = nonzeros(real(conj(YBus(m,n))));
+%             %Obj1 = Obj1 + real(conj(YBus(m,n))) * sum_square(real_voltages);
+%             Obj1 = Obj1 + sub_obj1 + sub_obj2;
+%         end
+%     end
+    
     
 %     for m = 1:nLines
 %         for n=1:nLines
@@ -73,15 +113,15 @@ cvx_begin
 %             Obj1 = Obj1 + real(conj(YBus(m,n))) * (square_real_voltage + square_imag_voltage);
 %         end
 %     end
-    for m = 1 : nLines
-      for n = 1 : nLines
-          %square_real_voltage = real(V(m))^2 + real(V(n))^2 + 2*real(V(m))*real(V(n));
-          %square_imag_voltage = imag(V(m))^2 + imag(V(n))^2 + 2*imag(V(m))*imag(V(n));
-          sum_real_voltage = real(V(m)) + real(V(n));
-          sum_imag_voltage = imag(V(m)) + imag(V(n));
-          Obj1 = Obj1 + real(conj(YBus(m,n)))* (square(sum_real_voltage) + square(sum_imag_voltage)); %Eq.1
-      end
-    end
+%     for m = 1 : nLines
+%       for n = 1 : nLines
+%           %square_real_voltage = real(V(m))^2 + real(V(n))^2 + 2*real(V(m))*real(V(n));
+%           %square_imag_voltage = imag(V(m))^2 + imag(V(n))^2 + 2*imag(V(m))*imag(V(n));
+%           sum_real_voltage = real(V(m)) + real(V(n));
+%           sum_imag_voltage = imag(V(m)) + imag(V(n));
+%           Obj1 = Obj1 + real(conj(YBus(m,n)))* (square(sum_real_voltage) + square(sum_imag_voltage)); %Eq.1
+%       end
+%     end
 
     
     % Defining the Objective for minimizing active power curtailment %
@@ -102,9 +142,16 @@ cvx_begin
     Obj3 = 0;
 %     for n = 1:size(YBus, 2)
 %         for l = 1:size(YBus,1)
-%             Obj3 = Obj3 + (abs(V(n)) - (1/((nBuses-1)+1)*sum(abs(V(l)))))^2;
+%             neighbor_nodes = sum(abs(V(l)));
+%             %neigbors = [abs(V(n)) neighbor_nodes];
+%             %ref = sum(neigbors);
+%             %Obj3 = Obj3 + (abs(V(n)) - (1/((nBuses-1)+1)*sum(abs(V(l)))))^2;
+%             Obj3 = Obj3 + neighbor_nodes;
 %         end 
 %     end
+    %temp = sum(abs(V*0.1));
+    %Obj3 = sum(abs(V(:))-temp);
+    %Obj3 = temp;
     % Adding everything together and expressing the objective function 
     minimize (Obj1 + Obj2 + Obj3) % Equation 4
     subject to
